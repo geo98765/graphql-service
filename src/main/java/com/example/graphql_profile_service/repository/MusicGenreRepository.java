@@ -10,10 +10,13 @@ import java.util.Optional;
 
 @Repository
 public interface MusicGenreRepository extends JpaRepository<MusicGenre, Integer> {
-    
+
     // Buscar género por nombre (case-insensitive)
     Optional<MusicGenre> findByNameIgnoreCase(String name);
-    
+
+    // Buscar géneros que contengan el texto especificado (para searchGenres)
+    List<MusicGenre> findByNameContainingIgnoreCase(String name);
+
     // Verificar si existe género por nombre
     boolean existsByNameIgnoreCase(String name);
 }
