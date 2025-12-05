@@ -8,34 +8,25 @@
 # ============================================
 type Query {
     """
-    Get user profile with basic information
+    Get user preferences (simplified version)
+    Returns basic preference information with favorite lists as strings
     Requires authentication
     """
-    userProfile(userId: Int!): UserProfile
+    getUserPreferences(userId: Int!): Preference
     
     """
-    Get user preferences including favorite artists and genres
-    Requires authentication
-    """
-    userPreferences(userId: Int!, includeFullLists: Boolean = false): UserPreferences
-    
-    """
-    Get all available music genres from database
+    Get all genres (simplified version)
+    Returns list of all music genres with id, name, and description
     Public endpoint
     """
-    allMusicGenres: [MusicGenre!]!
+    getAllGenres: [Genre!]!
     
     """
-    Get paginated favorite artists for a user
-    Requires authentication
+    Search genres by name
+    Returns all genres matching the search term
+    Public endpoint
     """
-    favoriteArtists(userId: Int!, page: Int = 0, size: Int = 10): ArtistPage!
-    
-    """
-    Get paginated favorite genres for a user
-    Requires authentication
-    """
-    favoriteGenres(userId: Int!, page: Int = 0, size: Int = 10): GenrePage!
+    searchGenres(name: String!): [Genre!]!
 }
 
 # ============================================
@@ -43,171 +34,57 @@ type Query {
 # ============================================
 type Mutation {
     """
-    Update user preferences (search radius and notifications)
-    Requires authentication - user can only update their own preferences
-    """
-    updateUserPreferences(input: UpdatePreferencesInput!): PreferenceBasicResponse!
-    
-    """
-    Add a favorite artist by Spotify ID
+    Create user preferences
+    Creates a new preference entry for a user
     Requires authentication
     """
-    addFavoriteArtist(userId: Int!, spotifyId: String!): Artist!
+    createPreference(userId: Int!, input: PreferenceInput!): Preference!
     
     """
-    Remove a favorite artist by Spotify ID
+    Update user preferences
+    Updates existing preferences for a user
     Requires authentication
-    Returns success message
     """
-    removeFavoriteArtist(userId: Int!, spotifyId: String!): String!
+    updatePreference(userId: Int!, input: PreferenceInput!): Preference!
     
     """
-    Add a favorite genre by ID or name
-    At least one parameter must be provided
+    Delete user preferences
+    Removes all preferences for a user
     Requires authentication
     """
-    addFavoriteGenre(userId: Int!, genreId: Int, genreName: String): MusicGenre!
-    
-    """
-    Remove a favorite genre by ID or name
-    At least one parameter must be provided
-    Requires authentication
-    Returns success message
-    """
-    removeFavoriteGenre(userId: Int!, genreId: Int, genreName: String): String!
+    deletePreference(userId: Int!): Boolean!
 }
 
 # ============================================
-# TYPES - User Profile
+# TYPES - Simplified Preference
 # ============================================
 
 """
-User profile information retrieved from user-service
+User preference information
+Stores favorite genres, cities, and artists as string arrays
 """
-type UserProfile {
+type Preference {
+    id: Int!
     userId: Int!
-    email: String!
-    userType: String!
-    profile: Profile
-    accountStatus: AccountStatus!
-    createdAt: String!
+    favoriteGenres: [String!]
+    favoriteCities: [String!]
+    favoriteArtists: [String!]
+    createdAt: String
     updatedAt: String
 }
 
-"""
-Profile information (nested within UserProfile)
-"""
-type Profile {
-    profileId: Int!
-    name: String!
-    location: ProfileLocation
-}
-
-"""
-Location information for profile (nested within Profile)
-"""
-type ProfileLocation {
-    profileLocationId: Int!
-    municipality: String
-    state: String
-    country: String
-}
-
-"""
-Account status flags
-"""
-type AccountStatus {
-    enabled: Boolean!
-    accountNonExpired: Boolean!
-    accountNonLocked: Boolean!
-    credentialsNonExpired: Boolean!
-}
-
 # ============================================
-# TYPES - Preferences
-# ============================================
-
-"""
-Complete user preferences with favorite lists
-"""
-type UserPreferences {
-    userPreferenceId: Int!
-    profileId: Int!
-    searchRadius: Float!
-    emailNotifications: Boolean!
-    favoriteArtists: [Artist!]
-    favoriteGenres: [MusicGenre!]
-    favoriteArtistsCount: Int!
-    favoriteGenresCount: Int!
-    maxFavoriteArtists: Int!
-    maxFavoriteGenres: Int!
-}
-
-"""
-Basic preference response (without lists)
-Used after updates
-"""
-type PreferenceBasicResponse {
-    userPreferenceId: Int!
-    profileId: Int!
-    searchRadius: Float!
-    emailNotifications: Boolean!
-}
-
-# ============================================
-# TYPES - Artists
-# ============================================
-
-"""
-Artist information from Spotify API
-"""
-type Artist {
-    spotifyId: String!
-    name: String!
-    genres: [String!]
-    popularity: Int
-    imageUrl: String
-    externalUrl: String
-    followers: Int
-}
-
-"""
-Paginated artist results
-"""
-type ArtistPage {
-    content: [Artist!]!
-    totalElements: Int!
-    totalPages: Int!
-    currentPage: Int!
-    pageSize: Int!
-    hasNext: Boolean!
-    hasPrevious: Boolean!
-}
-
-# ============================================
-# TYPES - Music Genres
+# TYPES - Genre
 # ============================================
 
 """
 Music genre from database
+Contains id, name, and optional description
 """
-type MusicGenre {
-    musicGenreId: Int!
+type Genre {
+    id: Int!
     name: String!
     description: String
-}
-
-"""
-Paginated genre results
-"""
-type GenrePage {
-    content: [MusicGenre!]!
-    totalElements: Int!
-    totalPages: Int!
-    currentPage: Int!
-    pageSize: Int!
-    hasNext: Boolean!
-    hasPrevious: Boolean!
 }
 
 # ============================================
@@ -215,10 +92,11 @@ type GenrePage {
 # ============================================
 
 """
-Input for updating user preferences
+Input for creating/updating user preferences
+All fields are optional arrays of strings
 """
-input UpdatePreferencesInput {
-    userId: Int!
-    searchRadiusKm: Float
-    emailNotifications: Boolean
+input PreferenceInput {
+    favoriteGenres: [String!]
+    favoriteCities: [String!]
+    favoriteArtists: [String!]
 }
